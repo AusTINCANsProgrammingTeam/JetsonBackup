@@ -1,0 +1,10 @@
+[Unit]
+Requires=multi-user.target
+After=multi-user.target
+
+[Service]
+ExecStart=/home/nvidia/robot.sh
+
+[Install]
+WantedBy=default.target
+
