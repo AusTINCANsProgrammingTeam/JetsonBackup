@@ -5,12 +5,13 @@ import asyncio
 from networktables import NetworkTables
 import logging
 #grip.py
-import gripnewmon as grip
+import griptues as grip
+import os
 
 import os
 import fnmatch
 
-DEBUG = True
+DEBUG = False
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -66,30 +67,42 @@ def transmit(gripPipe,camera, NetTable):
            AL = a2
          R = round(R, 3) # round the ratio so we dont get a super long float
          CenterX = (x1 + x2) / 2
+         width = camera.get(cv2.CAP_PROP_FRAME_WIDTH)
+         howFar = width/2 - CenterX
+
+
          print("AL = "+str(AL))
          print("R = "+str(R))
          print("X1 = "+str(x1))
          print("X2 = "+str(x2))
          print("CX = "+str(CenterX))
+         print("howFar = " + str(howFar))
+         print("width = "+str(width))
          
 
-         NetTable.putNumber("AL", AL);
+         NetTable.putNumber("LargestArea", AL);
          NetTable.putNumber("R", R);
          NetTable.putNumber("X1", x1);
          NetTable.putNumber("X2", x2);
          NetTable.putNumber("CX", CenterX);
+         NetTable.putNumber("howFar", howFar)
 
        else:
-         NetTable.putNumber("AL", -1);
+         print("Sending -1")
+         NetTable.putNumber("LargestArea", -1);
          NetTable.putNumber("R", -1);
          NetTable.putNumber("X1", -1);
          NetTable.putNumber("X2", -1);
          NetTable.putNumber("CX", -1);
-
-       rect1 = cv2.boundingRect(gripPipe.filter_contours_output[0])
-       x1 = rect1[0] + (rect1[2] /2)
-       y1 = rect1[1] + rect1[3]
-       w1 = rect1[2]
+         NetTable.putNumber("howFar", -1)
+    else:
+      print("Sending -1")
+      NetTable.putNumber("LargestArea", -1);
+      NetTable.putNumber("R", -1);
+      NetTable.putNumber("X1", -1);
+      NetTable.putNumber("X2", -1);
+      NetTable.putNumber("CX", -1);
+      NetTable.putNumber("howFar", -1)
        
        #rect2 = cv2.boundingRect(gripPipe.filter_contours_output[1])
        #x2 = rect2[0] + (rect2[2] /2)
@@ -101,19 +114,6 @@ def transmit(gripPipe,camera, NetTable):
        cv2.waitKey(1)
 
     print("-----")
-    if False: #x1
-      print("X1 = "+str(x1))
-      print("Y1 = "+str(y1))
-      print("W1 = "+str(w1)) # when do we need this?
-
-    if False:
-      print("X2 = "+str(x2))
-      print("Y2 = "+str(y2))
-      print("W2 = "+str(w2))
-      
-      NetTable.putNumber("X", x1);
-      NetTable.putNumber("Y", y1);
-      NetTable.putNumber("W", w1);
 
 # by calling vdevice.set(<proberty num>, value)
 #0 = POS_MSEC Current position of the video file in milliseconds.
@@ -160,6 +160,8 @@ time.sleep(2)                     #give the camera a second to power on
 g = grip.GripPipeline()
 NetworkTables.initialize(server='10.21.58.2')
 nt = NetworkTables.getTable("SmartDashboard")
+
+DEBUG = os.path.isfile("debug.txt")
 
 while True:
     transmit(gripPipe=g,camera=vdevice, NetTable=nt)
