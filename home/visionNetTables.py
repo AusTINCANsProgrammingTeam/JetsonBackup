@@ -70,14 +70,14 @@ def transmit(gripPipe,camera, NetTable):
          width = camera.get(cv2.CAP_PROP_FRAME_WIDTH)
          howFar = width/2 - CenterX
 
-
-         print("AL = "+str(AL))
-         print("R = "+str(R))
-         print("X1 = "+str(x1))
-         print("X2 = "+str(x2))
-         print("CX = "+str(CenterX))
-         print("howFar = " + str(howFar))
-         print("width = "+str(width))
+         if DEBUG:
+           print("AL = "+str(AL))
+           print("R = "+str(R))
+           print("X1 = "+str(x1))
+           print("X2 = "+str(x2))
+           print("CX = "+str(CenterX))
+           print("howFar = " + str(howFar))
+           print("width = "+str(width))
          
 
          NetTable.putNumber("LargestArea", AL);
@@ -88,7 +88,9 @@ def transmit(gripPipe,camera, NetTable):
          NetTable.putNumber("howFar", howFar)
 
        else:
-         print("Sending -1")
+         if DEBUG:
+           print("Sending -1")
+
          NetTable.putNumber("LargestArea", -1);
          NetTable.putNumber("R", -1);
          NetTable.putNumber("X1", -1);
@@ -96,7 +98,8 @@ def transmit(gripPipe,camera, NetTable):
          NetTable.putNumber("CX", -1);
          NetTable.putNumber("howFar", -1)
     else:
-      print("Sending -1")
+      if DEBUG:
+        print("Sending -1")
       NetTable.putNumber("LargestArea", -1);
       NetTable.putNumber("R", -1);
       NetTable.putNumber("X1", -1);
@@ -109,11 +112,12 @@ def transmit(gripPipe,camera, NetTable):
        #y2 = rect2[1] + rect2[3]
        #w2 = rect2[2]
      
-    if DEBUG == True:
+    if DEBUG:
        cv2.imshow("Debug", frame) #,mask)
        cv2.waitKey(1)
 
-    print("-----")
+    if DEBUG:
+      print("-----")
 
 # by calling vdevice.set(<proberty num>, value)
 #0 = POS_MSEC Current position of the video file in milliseconds.
@@ -140,7 +144,15 @@ def CV_FPS_PROP(): return 5
 
 #Find the camera device number
 #Should look like /dev/video0, where 0 is the camera number
-#TODO determine the vision camera from the list of cameras in the dev folder
+visionCamID = "0772"
+cameraNum = None
+cameraMap = open("cameraMap.txt", "r")
+for cameraStr in cameraMap:
+  if visionCamID in cameraStr:
+    cameraNum = cameraStr.split()[0]
+    cameraNum = cameraNum.replace("/dev/video", "")
+    cameraNum = int(cameraNum)
+    break
 
 videoNum = None
 for file in os.listdir('/dev'):
@@ -148,12 +160,12 @@ for file in os.listdir('/dev'):
      videoNum = int(file[-1:])
      break
 
-if not videoNum is None:
-  vdevice = cv2.VideoCapture(videoNum)         #configure the camera device
+if not cameraNum is None:
+  vdevice = cv2.VideoCapture(cameraNum)         #configure the camera device
   vdevice.set(CV_FPS_PROP(), 60)
   vdevice.set(CV_BRIGHTNESS_PROP(), 0.3)
 else:
-  print("Failed to find camera")
+  print("Failed to find vision camera")
   exit()
 time.sleep(2)                     #give the camera a second to power on
 
